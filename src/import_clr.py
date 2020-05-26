@@ -12,7 +12,7 @@ if bits == "64bit":
 else:
 	folder = ["x86"]
 
-sys.path.append(os.path.join("..", *folder))
+sys.path.append(os.path.join(".", *folder))
 sys.path.append(os.path.join(*folder))
 
 # sys.path.append(os.path.join("..", "..", "ir16filters", *folder))

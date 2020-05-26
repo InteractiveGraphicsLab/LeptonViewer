@@ -255,7 +255,7 @@ class Application(tk.Frame):
 
     def updateTemp(self):
         global t_c, t_k
-        t_c = float(self.S1.get())
+        t_c = float(self.S8.get())
         t_k = celsius_to_centikelvin(t_c)
 
     def updateDisplaySetting(self):
