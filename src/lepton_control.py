@@ -2,8 +2,6 @@ from import_clr import *
 clr.AddReference("ManagedIR16Filters")
 from Lepton import CCI
 from IR16Filters import IR16Capture, NewIR16FrameEvent, NewBytesFrameEvent
-# from matplotlib import pyplot as plt
-# from matplotlib import cm
 import numpy as np
 import time
 from collections import deque
@@ -35,11 +33,16 @@ class Lepton:
         # lep.sys.SetGainMode(CCI.Sys.GainMode.LOW)
         # lep.vid.SetPcolorLut(3)
 
+        # print(self.lep.sys.GetFpaTemperatureKelvin())
+
+
         try:
             self.lep.rad.SetTLinearEnableStateChecked(True)
             print("This lepton supports tlinear")
+            self.tlinear = True
         except:
             print("This lepton does not support tlinear")
+            self.tlinear = False
 
         # Start streaming
         self.capture = None
@@ -60,6 +63,10 @@ class Lepton:
         arr = self.short_array_to_numpy(height, width, net_array)
         return arr
 
+    def camera_temp(self):
+        return self.lep.sys.GetFpaTemperatureKelvin()
+
+
     def stop_streaming(self):
         print("Stop streaming")
         self.capture.StopGraph()
@@ -68,15 +75,6 @@ class Lepton:
     def __got_a_frame(self, short_array, width, height):
         self.incoming_frames.append((height, width, short_array))
 
-
     @staticmethod
     def short_array_to_numpy(height, width, frame):
         return np.fromiter(frame, dtype="uint16").reshape(height, width)
-
-
-
-# while True:
-
-
-if __name__ == "__main__":
-    pass

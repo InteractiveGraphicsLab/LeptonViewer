@@ -4,10 +4,9 @@ block_cipher = None
 
 
 a = Analysis(['src\\viewer.py'],
-             pathex=['C:\\Users\\CitrusC\\Documents\\GitHub\\LeptonViewer'],
              binaries=[],
              datas=[],
-             hiddenimports=['clr'],
+             hiddenimports=['clr', 'pkg_resources.py2_warn'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
