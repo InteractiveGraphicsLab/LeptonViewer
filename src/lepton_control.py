@@ -58,10 +58,28 @@ class Lepton:
         while len(self.incoming_frames) == 0:
             time.sleep(.1)
 
-    def update_frame(self):
+
+    def update_frame(self, rotate=0, flip=0):
         height, width, net_array = self.incoming_frames[-1]
         arr = self.short_array_to_numpy(height, width, net_array)
+
+        if rotate == 0 and flip:
+            arr = np.flip(arr, 1)
+        elif rotate == 1 and not flip:
+            arr = np.flip(np.transpose(arr, (1, 0)), 1)
+        elif rotate == 1 and flip:
+            arr = np.flip(np.flip(np.transpose(arr, (1, 0)), 0), 1)
+        elif rotate == 2 and not flip:
+            arr = np.flip(np.flip(arr, 0), 1)
+        elif rotate == 2 and flip:
+            arr = np.flip(arr, 0)
+        elif rotate == 3 and not flip:
+            arr = np.flip(np.transpose(arr, (1, 0)), 0)
+        elif rotate == 3 and flip:
+            arr = np.transpose(arr, (1, 0))
         return arr
+
+
 
     def camera_temp(self):
         return self.lep.sys.GetFpaTemperatureKelvin()

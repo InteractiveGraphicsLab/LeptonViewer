@@ -19,12 +19,12 @@ class Application(tk.Frame):
         # MainPanel を 全体に配置し、右クリックをpopup menu に対応付け
         self.lmain = tk.Label(root)
         self.lmain.pack()
-        self.lmain.bind("<Button-3>", self.popup_menu)
+        self.lmain.bind("<Button-3>", self.right_button_clicked)
 
         #Menu 作成
         self.m = tk.Menu(root, tearoff=0)
-        self.m.add_command(label="ここの温度を表示", command=self.start_vis_temp )
-        self.m.add_command(label="温度非表示"     , command=self.stop_vis_temp  )
+        self.m.add_command(label="ここの温度を表示", command=self.start_show_temp )
+        self.m.add_command(label="温度非表示"     , command=self.stop_show_temp  )
         self.m.add_separator()
         self.m.add_command(label="設定"          , command=self.setting)
 
@@ -43,44 +43,33 @@ class Application(tk.Frame):
         else:
             self.tone_min = int(config['TONE MAPPING']['manual_min'])
             self.tone_max = int(config['TONE MAPPING']['manual_max'])
-        self.right_click_position = self.point_position = (W_SIZE[0]//2, W_SIZE[1]//2)
+        self.popup_point = self.temperature_point = (W_SIZE[0] // 2, W_SIZE[1] // 2)
 
 
-    def stop_vis_temp(self):
-        global DISPLAY_POINT_TEMP
-        DISPLAY_POINT_TEMP = False
-
-    def start_vis_temp(self):
-        global DISPLAY_POINT_TEMP
-        DISPLAY_POINT_TEMP = True
-        self.point_position = self.right_click_position
-
-    def popup_menu(self, event):
-        self.right_click_position = (event.x, event.y)
+    def right_button_clicked(self, event):
+        self.popup_point = (event.x, event.y)
         try:
             self.m.tk_popup(event.x_root, event.y_root)
         finally:
             self.m.grab_release()
 
-    def show_lepton_frame(self):
-        raw = self.camera.update_frame()
 
-        if ROTATE == 0 and FLIP:
-            raw = np.flip(raw, 1)
-        elif ROTATE == 1 and not FLIP:
-            raw = np.flip(np.transpose(raw, (1, 0)), 1)
-        elif ROTATE == 1 and FLIP:
-            raw = np.flip(np.flip(np.transpose(raw, (1, 0)), 0), 1)
-        elif ROTATE == 2 and not FLIP:
-            raw = np.flip(np.flip(raw, 0), 1)
-        elif ROTATE == 2 and FLIP:
-            raw = np.flip(raw, 0)
-        elif ROTATE == 3 and not FLIP:
-            raw = np.flip(np.transpose(raw, (1, 0)), 0)
-        elif ROTATE == 3 and FLIP:
-            raw = np.transpose(raw, (1, 0))
+    def stop_show_temp(self):
+        global SHOW_TEMPERATURE
+        SHOW_TEMPERATURE = False
 
+
+    def start_show_temp(self):
+        global SHOW_TEMPERATURE
+        SHOW_TEMPERATURE = True
+        self.temperature_point = self.popup_point
+
+
+    def show_lepton_frame(self) :
+        # get lepton image (raw) and convert it to temperature (temp)
+        raw = self.camera.update_frame(ROTATE, FLIP)
         camera_temp = self.camera.camera_temp()
+
         if self.camera.tlinear:
             # Lepton 3.5 (with radiometric accuracy)
             temp = raw + OFFSET
@@ -90,7 +79,7 @@ class Application(tk.Frame):
             temp = raw * COEF + camera_temp - 8192 * COEF + OFFSET
         temp_max = int(np.max(temp))
 
-
+        #tone mapping ここまでみたよ！
         current_min = int(np.min(raw))
         current_max = int(np.max(raw))
 
@@ -129,16 +118,16 @@ class Application(tk.Frame):
             text = "CAM: {:.2f}".format(centikelvin_to_celsius(camera_temp))
             res = cv2.putText(res, text, (W_SIZE[0]-125, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
 
-        if DISPLAY_POINT_TEMP:
+        if SHOW_TEMPERATURE:
             scale = raw.shape[1] / W_SIZE[0]
-            r_p = (int(self.point_position[0] * scale), int(self.point_position[1] * scale))
+            r_p = (int(self.temperature_point[0] * scale), int(self.temperature_point[1] * scale))
             shift = int(10 * scale)
             point_temp = np.mean(temp[r_p[1]-shift : r_p[1]+shift, r_p[0]-shift : r_p[0]+shift])
             text = "{:.2f}".format(centikelvin_to_celsius(point_temp))
-            res = cv2.putText(res, text, (self.point_position[0] - 28, self.point_position[1] - 20),
+            res = cv2.putText(res, text, (self.temperature_point[0] - 28, self.temperature_point[1] - 20),
                               cv2.FONT_HERSHEY_PLAIN, 1.25, (32, 32, 255), 1, cv2.LINE_AA)
-            res = cv2.rectangle(res, (self.point_position[0] + 10, self.point_position[1] + 10),
-                                (self.point_position[0] - 10, self.point_position[1] - 10),
+            res = cv2.rectangle(res, (self.temperature_point[0] + 10, self.temperature_point[1] + 10),
+                                (self.temperature_point[0] - 10, self.temperature_point[1] - 10),
                                 (32, 32, 255), 1, cv2.LINE_AA, 0)
 
         imgtk = ImageTk.PhotoImage(image=Image.fromarray(res))
@@ -155,6 +144,9 @@ class Application(tk.Frame):
                 self.tone_min -= int(MAX_SPEED * (self.tone_min - current_min))
             if self.tone_max - current_max > deadband or self.tone_max - current_max < -deadband:
                 self.tone_max -= int(MAX_SPEED * (self.tone_max - current_max))
+
+
+
 
     def setting(self):
         top = tk.Toplevel(self)
@@ -334,7 +326,7 @@ class Application(tk.Frame):
         saveButton.pack(side=tk.RIGHT)
 
     def update_view_setting(self):
-        global FLIP, ROTATE, W_SIZE, DISPLAY_POINT_TEMP
+        global FLIP, ROTATE, W_SIZE, SHOW_TEMPERATURE
         if self.varC1.get() == 0:
             FLIP = False
         else:
@@ -342,7 +334,7 @@ class Application(tk.Frame):
         ROTATE = self.varR.get()
         W_SIZE[0] = int(self.S1.get())
         W_SIZE[1] = int(W_SIZE[0] * 3 // 4)
-        DISPLAY_POINT_TEMP = False
+        SHOW_TEMPERATURE = False
 
     def update_tone_setting(self):
         global AUTO_TONE_MAPPING, MAX_SPEED, BLACK_POINT, WHITE_POINT, MANUAL_MIN, MANUAL_MAX, MANUAL_MIN_K, MANUAL_MAX_K
@@ -455,7 +447,7 @@ WARNING_SIGN = config.getboolean('THERSHOLD', 'warning_sign')
 OFFSET = int(config['CALIBRATION']['offset'])
 COEF = float(config['CALIBRATION']['coefficient']) * 100
 
-DISPLAY_POINT_TEMP = False
+SHOW_TEMPERATURE = False
 
 
 if __name__ == "__main__":
