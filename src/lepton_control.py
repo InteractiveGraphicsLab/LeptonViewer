@@ -22,8 +22,8 @@ class Lepton:
             self.lep = found_device.Open()
 
         # Get the current camera uptime
-        print(self.lep.oem.GetSoftwareVersion())
-        print("Camera Up Time: {}".format(self.lep.sys.GetCameraUpTime()))
+        #print(self.lep.oem.GetSoftwareVersion())
+        #print("Camera Up Time: {}".format(self.lep.sys.GetCameraUpTime()))
 
         # Run a FFC. If this command executes successfully, the shutter on the lepton should close and open.
         self.lep.sys.RunFFCNormalization()

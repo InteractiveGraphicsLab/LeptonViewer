@@ -8,19 +8,27 @@ import math
 import configparser
 import lepton_control
 
+
 class Application(tk.Frame):
+
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
         self.pack()
+
+        # MainPanel を 全体に配置し、右クリックをpopup menu に対応付け
         self.lmain = tk.Label(root)
         self.lmain.pack()
-        self.m = tk.Menu(root, tearoff=0)
-        self.m.add_command(label="ここの温度を表示", command=self.update_display_point_temp)
-        self.m.add_command(label="温度非表示", command=self.stop_display_point_temp)
-        self.m.add_separator()
-        self.m.add_command(label="設定", command=self.setting)
         self.lmain.bind("<Button-3>", self.popup_menu)
+
+        #Menu 作成
+        self.m = tk.Menu(root, tearoff=0)
+        self.m.add_command(label="ここの温度を表示", command=self.start_vis_temp )
+        self.m.add_command(label="温度非表示"     , command=self.stop_vis_temp  )
+        self.m.add_separator()
+        self.m.add_command(label="設定"          , command=self.setting)
+
+        #lepton カメラの読み込み
         try:
             self.camera = lepton_control.Lepton()
         except:
@@ -38,14 +46,13 @@ class Application(tk.Frame):
         self.right_click_position = self.point_position = (W_SIZE[0]//2, W_SIZE[1]//2)
 
 
-    def stop_display_point_temp(self):
+    def stop_vis_temp(self):
         global DISPLAY_POINT_TEMP
         DISPLAY_POINT_TEMP = False
 
-    def update_display_point_temp(self):
+    def start_vis_temp(self):
         global DISPLAY_POINT_TEMP
-        if not DISPLAY_POINT_TEMP:
-            DISPLAY_POINT_TEMP = True
+        DISPLAY_POINT_TEMP = True
         self.point_position = self.right_click_position
 
     def popup_menu(self, event):
@@ -457,5 +464,7 @@ if __name__ == "__main__":
     root.title("Lepton Viewer")
     root.iconbitmap('./logo.ico')
     root.protocol("WM_DELETE_WINDOW", app.on_closing)
+
+
     app.show_lepton_frame()
     app.mainloop()
