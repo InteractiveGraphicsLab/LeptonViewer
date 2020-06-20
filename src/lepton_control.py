@@ -7,9 +7,7 @@ import time
 from collections import deque
 
 
-
 class Lepton:
-
     def __init__(self):
         # Find device
         found_device = None
@@ -24,13 +22,13 @@ class Lepton:
             self.lep = found_device.Open()
 
         # Get the current camera uptime
-        #print(self.lep.oem.GetSoftwareVersion())
-        #print("Camera Up Time: {}".format(self.lep.sys.GetCameraUpTime()))
+        # print(self.lep.oem.GetSoftwareVersion())
+        # print("Camera Up Time: {}".format(self.lep.sys.GetCameraUpTime()))
 
         # Run a FFC. If this command executes successfully, the shutter on the lepton should close and open.
         self.lep.sys.RunFFCNormalization()
 
-        # Get the current palette (P**seudo-color** L*ook *Up Table)
+        # Get the current palette (**Pseudo-color** L*ook *Up Table)
         # lep.vid.GetPcolorLut()
         # lep.sys.SetGainMode(CCI.Sys.GainMode.LOW)
         # lep.vid.SetPcolorLut(3)
@@ -48,7 +46,7 @@ class Lepton:
         self.capture = None
         # change maxlen to control the number of frames of history we want to keep
         self.incoming_frames = deque(maxlen=10)
-        if self.capture != None:
+        if self.capture is not None:
             # don't recreate capture if we already made one
             self.capture.RunGraph()
         else:
@@ -58,8 +56,7 @@ class Lepton:
         while len(self.incoming_frames) == 0:
             time.sleep(.1)
 
-
-    def update_frame(self, rotate=0, flip=0, coef=0.05, offset=0):
+    def update_frame(self, rotate=0, flip=0, coef=0.05, offset=0.0):
         height, width, net_array = self.incoming_frames[-1]
         raw = self.short_array_to_numpy(height, width, net_array)
 
@@ -78,7 +75,7 @@ class Lepton:
         elif rotate == 3 and flip:
             raw = np.transpose(raw, (1, 0))
 
-
+        # print("debug", coef, offset)
         if self.tlinear:
             # Lepton 3.5 (with radiometric accuracy)
             # raw is in centikelvin
@@ -86,18 +83,16 @@ class Lepton:
         else:
             # Lepton 3.0 (without radiometric accuracy), need to calibrate the coefficient(COEF)
             # raw is in raw value
-            # celsiuc = (raw_data - 8192) * coefficient / 100 + camera_temperature
+            # celsius = (raw_data - 8192) * coefficient / 100 + camera_temperature
             temp = (np.float64(raw) - 8192) * coef + offset + self.camera_temp()
 
         return raw, temp
-
 
     # return in celsius
     def camera_temp(self):
         # note self.lep.sys.GetFpaTemperatureKelvin() is in centi_kelvin
         # convert it in celsius by (value - 27315) / 100
         return (self.lep.sys.GetFpaTemperatureKelvin() - 27315) / 100
-
 
     def stop_streaming(self):
         print("Stop streaming")
