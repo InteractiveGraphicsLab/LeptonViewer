@@ -57,8 +57,7 @@ class Application(tk.Frame):
     def show_lepton_frame(self):
         # get lepton image (raw) and convert it to temperature (temp)
         raw_img, temp_img = self.camera.update_frame(ROTATE, FLIP, COEFFICIENT, OFFSET)
-        temp_max = int(np.max(temp_img))
-        camera_temp = self.camera.camera_temp()
+        temp_max = np.max(temp_img)
 
         # tone mapping
         gray = np.interp(temp_img, (TONE_MIN, TONE_MAX), (0, 255)).astype('uint8')
@@ -90,6 +89,7 @@ class Application(tk.Frame):
             res = cv2.putText(res, text, (10, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
 
         if SHOW_CAMTEMP:
+            camera_temp = self.camera.camera_temp()
             text = "CAM: {:.2f}".format(camera_temp)
             res = cv2.putText(res, text, (W_SIZE[0]-125, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
 
@@ -97,7 +97,7 @@ class Application(tk.Frame):
             scale = raw_img.shape[1] / W_SIZE[0]
             r_p = (int(self.temperature_point[0] * scale), int(self.temperature_point[1] * scale))
             shift = int(10 * scale)
-            point_temp = np.mean(temp_img[r_p[1]-shift : r_p[1]+shift, r_p[0]-shift : r_p[0]+shift])
+            point_temp = np.mean(temp_img[r_p[1]-shift: r_p[1]+shift, r_p[0]-shift : r_p[0]+shift])
             text = "{:.2f}".format(point_temp)
             res = cv2.putText(res, text, (self.temperature_point[0] - 28, self.temperature_point[1] - 20),
                               cv2.FONT_HERSHEY_PLAIN, 1.25, (32, 32, 255), 1, cv2.LINE_AA)
