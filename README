@@ -15,7 +15,7 @@
 ・PycharmでLeptonViewerプロジェクトを開く
 ・Interpreterを追加：
 	File > Settings > Project: プロジェクト名※ > Project Interpreter > ギアマーク
-	Add > New environment > OK
+	Add > New environment > (virtual environmentが初めから選択されているはず) > OK
 ・パッケージをインストール：
 	File > Settings > Project: プロジェクト名※ > Project Interpreter > プラスマーク
 	それぞれを検索してInstall Packageを押す：
@@ -23,6 +23,12 @@
 		- Pillow
 		- pythonnet
 ※プロジェクト名は LeptonViewer
+	File > Settings > Project: プロジェクト名※ > Project Structure > add content root
+	srcフォルダを選択(mark as sourcesを指定) > OK
+	-->　Project windowにsrcフォルダが配置される
+・ソースコードをプロジェクトへ追加 :
+
+
 
 4. 実行
 ・viewer.pyを右クリック > Run
