@@ -6,6 +6,12 @@ import configparser
 # visualization window size
 W_SIZE = [800, 600]
 
+# ROI (x,y,W,H)
+ROI_RECT = [0, 0, 800, 600]
+
+#Bell Type 0, 1, or 2
+BELL_TYPE = 0
+
 # flag for flipping image
 FLIP = True
 
@@ -73,7 +79,6 @@ def save_setting():
 
 
 class SettingDlg:
-
     def __init__(self, camera_is_tlinear):
         top = tk.Toplevel()
         top.resizable(0, 0)
@@ -149,6 +154,30 @@ class SettingDlg:
         self.spin_tonemin.grid(row=0, column=1, padx=5, pady=5)
         self.spin_tonemax.grid(row=0, column=3, padx=5, pady=5)
 
+        # トーンマッピング --------------------------------------------------------------------------------
+        lf_roi = tk.LabelFrame(top, text="ROI rect")
+        lf_roi.pack(fill="both", expand="yes", padx=10, pady=5)
+        roi_label1 = tk.Label(lf_roi, text="位置　(x, y)")
+        roi_label2 = tk.Label(lf_roi, text="大きさ(W, H)")
+        roi_label1.grid(row=0, column=0, padx=5, pady=5)
+        roi_label2.grid(row=1, column=0, padx=5, pady=5)
+        self.var_roix = tk.StringVar()
+        self.var_roiy = tk.StringVar()
+        self.var_roiw = tk.StringVar()
+        self.var_roih = tk.StringVar()
+        self.var_roix.set(ROI_RECT[0])
+        self.var_roiy.set(ROI_RECT[1])
+        self.var_roiw.set(ROI_RECT[2])
+        self.var_roih.set(ROI_RECT[3])
+        self.spin_roix = tk.Spinbox(lf_roi, from_=0, to=600, increment=1, textvariable=self.var_roix, width=6, command=self.update)
+        self.spin_roiy = tk.Spinbox(lf_roi, from_=0, to=800, increment=1, textvariable=self.var_roiy, width=6, command=self.update)
+        self.spin_roiw = tk.Spinbox(lf_roi, from_=1, to=600, increment=1, textvariable=self.var_roiw, width=6, command=self.update)
+        self.spin_roih = tk.Spinbox(lf_roi, from_=1, to=800, increment=1, textvariable=self.var_roih, width=6, command=self.update)
+        self.spin_roix.grid(row=0, column=1, padx=2, pady=2)
+        self.spin_roiy.grid(row=0, column=2, padx=2, pady=2)
+        self.spin_roiw.grid(row=1, column=1, padx=2, pady=2)
+        self.spin_roih.grid(row=1, column=2, padx=2, pady=2)
+
         # threshold --------------------------------------------------------------------------------
         lf_threshold = tk.LabelFrame(top, text="Threshold - 超過温度可視化")
         lf_threshold.pack(fill="both", expand="yes", padx=10, pady=5, ipady=5)
@@ -206,6 +235,11 @@ class SettingDlg:
 
         TONE_MIN = float(self.spin_tonemin.get())
         TONE_MAX = float(self.spin_tonemax.get())
+
+        ROI_RECT[0] = int(self.spin_roix.get())
+        ROI_RECT[1] = int(self.spin_roiy.get())
+        ROI_RECT[2] = int(self.spin_roiw.get())
+        ROI_RECT[3] = int(self.spin_roih.get())
 
         THRESHOLD = float(self.spin_threshold.get())
 

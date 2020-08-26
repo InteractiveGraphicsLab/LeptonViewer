@@ -13,22 +13,23 @@
 ・pythonをインストール（python 3.7とanaconda1.5.1で開発）
 ・Pycharm (コミュニティ)をインストール
 ・PycharmでLeptonViewerプロジェクトを開く
+    1. pycharmのOpenProject から LeptonViewerフォルダを選択して開く
+    2. ソースコードをプロジェクトへ追加 :
+        プロジェクトを開いてもpythonプログラムファイルは表示されないので以下の手順を踏む必要がある
+        File > Settings > Project: プロジェクト名※ > Project Structure > add content root
+        srcフォルダを選択(mark as sourcesを指定) > OK
+        -->　Project windowにsrcフォルダが配置される
+
 ・Interpreterを追加：
-	File > Settings > Project: プロジェクト名※ > Project Interpreter > ギアマーク
-	Add > New environment > (virtual environmentが初めから選択されているはず) > OK
+	File > Settings > Project: プロジェクト名※ > Project Interpreter >
+	ギアマーク(右上)をクリック > Add >
+	(virtual environmentが初めから選択されているはず) >  New environmentを選択 > OKをクリック
 ・パッケージをインストール：
-	File > Settings > Project: プロジェクト名※ > Project Interpreter > プラスマーク
-	それぞれを検索してInstall Packageを押す：
+	File > Settings > Project: プロジェクト名※ > Project Interpreter >
+	プラスマークをクリック > 以下3項目をそれぞれ検索してInstall Packageを押す：
 		- opencv-python（自動でnumpyもインストールされるはず）
 		- Pillow
 		- pythonnet
-※プロジェクト名は LeptonViewer
-	File > Settings > Project: プロジェクト名※ > Project Structure > add content root
-	srcフォルダを選択(mark as sourcesを指定) > OK
-	-->　Project windowにsrcフォルダが配置される
-・ソースコードをプロジェクトへ追加 :
-
-
 
 4. 実行
 ・viewer.pyを右クリック > Run
