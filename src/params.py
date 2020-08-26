@@ -9,7 +9,7 @@ W_SIZE = [800, 600]
 # ROI (x,y,W,H)
 ROI_RECT = [0, 0, 800, 600]
 
-#Bell Type 0, 1, or 2
+# Bell Type 0, 1, or 2
 BELL_TYPE = 0
 
 # flag for flipping image
@@ -34,8 +34,9 @@ OFFSET = 0.0
 COEFFICIENT = 0.05
 
 
+
 def init():
-    global W_SIZE, FLIP, ROTATE, TONE_MIN, TONE_MAX, THRESHOLD, SHOW_MAXTEMP, SHOW_CAMTEMP, OFFSET, COEFFICIENT
+    global W_SIZE, FLIP, ROTATE, TONE_MIN, TONE_MAX, THRESHOLD, SHOW_MAXTEMP, SHOW_CAMTEMP, OFFSET, COEFFICIENT, ROI_RECT, BELL_TYPE
     config = configparser.ConfigParser()
     config.read("./config.ini")
 
@@ -51,6 +52,13 @@ def init():
 
     OFFSET = float(config['CALIBRATION']['offset'])
     COEFFICIENT = float(config['CALIBRATION']['coefficient'])
+
+    ROI_RECT[0] = int(config['ROI_RECT']['x'])
+    ROI_RECT[1] = int(config['ROI_RECT']['y'])
+    ROI_RECT[2] = int(config['ROI_RECT']['w'])
+    ROI_RECT[3] = int(config['ROI_RECT']['h'])
+
+    BELL_TYPE = int(config['BELL_TYPE']['bell'])
 
 
 def save_setting():
@@ -73,6 +81,15 @@ def save_setting():
     config.add_section('CALIBRATION')
     config.set('CALIBRATION', 'offset', str(OFFSET))
     config.set('CALIBRATION', 'coefficient', str(COEFFICIENT))
+
+    config.add_section('ROI_RECT')
+    config.set('ROI_RECT', 'x', str(ROI_RECT[0]))
+    config.set('ROI_RECT', 'y', str(ROI_RECT[1]))
+    config.set('ROI_RECT', 'w', str(ROI_RECT[2]))
+    config.set('ROI_RECT', 'h', str(ROI_RECT[3]))
+
+    config.add_section('BELL_TYPE')
+    config.set('BELL_TYPE', 'bell', int(BELL_TYPE))
 
     with open('./config.ini', 'w') as configfile:
         config.write(configfile)
@@ -169,10 +186,10 @@ class SettingDlg:
         self.var_roiy.set(ROI_RECT[1])
         self.var_roiw.set(ROI_RECT[2])
         self.var_roih.set(ROI_RECT[3])
-        self.spin_roix = tk.Spinbox(lf_roi, from_=0, to=600, increment=1, textvariable=self.var_roix, width=6, command=self.update)
-        self.spin_roiy = tk.Spinbox(lf_roi, from_=0, to=800, increment=1, textvariable=self.var_roiy, width=6, command=self.update)
-        self.spin_roiw = tk.Spinbox(lf_roi, from_=1, to=600, increment=1, textvariable=self.var_roiw, width=6, command=self.update)
-        self.spin_roih = tk.Spinbox(lf_roi, from_=1, to=800, increment=1, textvariable=self.var_roih, width=6, command=self.update)
+        self.spin_roix = tk.Spinbox(lf_roi, from_=0, to=1200, increment=1, textvariable=self.var_roix, width=6, command=self.update)
+        self.spin_roiy = tk.Spinbox(lf_roi, from_=0, to=1200, increment=1, textvariable=self.var_roiy, width=6, command=self.update)
+        self.spin_roiw = tk.Spinbox(lf_roi, from_=1, to=1200, increment=1, textvariable=self.var_roiw, width=6, command=self.update)
+        self.spin_roih = tk.Spinbox(lf_roi, from_=1, to=1200, increment=1, textvariable=self.var_roih, width=6, command=self.update)
         self.spin_roix.grid(row=0, column=1, padx=2, pady=2)
         self.spin_roiy.grid(row=0, column=2, padx=2, pady=2)
         self.spin_roiw.grid(row=1, column=1, padx=2, pady=2)
@@ -240,6 +257,15 @@ class SettingDlg:
         ROI_RECT[1] = int(self.spin_roiy.get())
         ROI_RECT[2] = int(self.spin_roiw.get())
         ROI_RECT[3] = int(self.spin_roih.get())
+        if ROTATE % 2 == 0:
+            w, h = W_SIZE[0], W_SIZE[1]
+        else:
+            w, h = W_SIZE[1], W_SIZE[0]
+        print(W_SIZE, w, h)
+        ROI_RECT[0] = np.clip(ROI_RECT[0], 0, w-2)
+        ROI_RECT[1] = np.clip(ROI_RECT[1], 0, h-2)
+        ROI_RECT[2] = np.clip(ROI_RECT[2], 1, w  )
+        ROI_RECT[3] = np.clip(ROI_RECT[3], 1, h  )
 
         THRESHOLD = float(self.spin_threshold.get())
 
