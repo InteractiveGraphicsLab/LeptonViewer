@@ -95,6 +95,18 @@ def save_setting():
         config.write(configfile)
 
 
+def get_bellpath():
+    if BELL_TYPE == 0:
+        return "./bell1.wav"
+    if BELL_TYPE == 1:
+        return "./bell2.wav"
+    if BELL_TYPE == 2:
+        return "./bell3.wav"
+    if BELL_TYPE == 3:
+        return "./bell4.wav"
+    return "./bell1.wav"
+
+
 class SettingDlg:
     def __init__(self, camera_is_tlinear):
         top = tk.Toplevel()
@@ -171,8 +183,8 @@ class SettingDlg:
         self.spin_tonemin.grid(row=0, column=1, padx=5, pady=5)
         self.spin_tonemax.grid(row=0, column=3, padx=5, pady=5)
 
-        # トーンマッピング --------------------------------------------------------------------------------
-        lf_roi = tk.LabelFrame(top, text="ROI rect")
+        # ROI rectangle --------------------------------------------------------------------------------
+        lf_roi = tk.LabelFrame(top, text="最大温度計測領域（ROI）")
         lf_roi.pack(fill="both", expand="yes", padx=10, pady=5)
         roi_label1 = tk.Label(lf_roi, text="位置　(x, y)")
         roi_label2 = tk.Label(lf_roi, text="大きさ(W, H)")
@@ -200,12 +212,24 @@ class SettingDlg:
         lf_threshold.pack(fill="both", expand="yes", padx=10, pady=5, ipady=5)
 
         label_threshold = tk.Label(lf_threshold, text="    閾値温度[℃] ")
-        label_threshold.pack(side=tk.LEFT)
+        label_bell_type = tk.Label(lf_threshold, text=" bell type")
         self.var_threshold = tk.StringVar()
         self.var_threshold.set(THRESHOLD)
         self.spin_threshold = tk.Spinbox(lf_threshold, from_=-100, to=500, format="%.2f", increment=0.1, width=6,
                                          textvariable=self.var_threshold, command=self.update)
-        self.spin_threshold.pack(side=tk.LEFT)
+        self.var_belltype = tk.IntVar()
+        self.var_belltype.set(BELL_TYPE)
+        b1 = tk.Radiobutton(lf_threshold, text="0", value=0, variable=self.var_belltype, command=self.update)
+        b2 = tk.Radiobutton(lf_threshold, text="1", value=1, variable=self.var_belltype, command=self.update)
+        b3 = tk.Radiobutton(lf_threshold, text="2", value=2, variable=self.var_belltype, command=self.update)
+        b4 = tk.Radiobutton(lf_threshold, text="3", value=3, variable=self.var_belltype, command=self.update)
+        label_threshold.grid(row=0, column=0, padx=0, pady=5)
+        self.spin_threshold.grid(row=0, column=1, padx=0, pady=5)
+        label_bell_type.grid(row=1, column=0, padx=0, pady=5)
+        b1.grid(row=1, column=1, padx=0, pady=5)
+        b2.grid(row=1, column=2, padx=0, pady=5)
+        b3.grid(row=1, column=3, padx=0, pady=5)
+        b4.grid(row=1, column=4, padx=0, pady=5)
 
         # calibration  --------------------------------------------------------------------------------
         lf_calibration = tk.LabelFrame(top, text="Calibration")
@@ -242,11 +266,13 @@ class SettingDlg:
         btn_save.pack(side=tk.RIGHT)
 
     def update(self):
-        global FLIP, ROTATE, W_SIZE, SHOW_MAXTEMP, SHOW_CAMTEMP, TONE_MIN, TONE_MAX, THRESHOLD, OFFSET, COEFFICIENT
+        global FLIP, ROTATE, W_SIZE, SHOW_MAXTEMP, SHOW_CAMTEMP, TONE_MIN, TONE_MAX, THRESHOLD, OFFSET, COEFFICIENT, \
+            ROI_RECT, BELL_TYPE
         FLIP = bool(self.var_flip.get())
         SHOW_MAXTEMP = bool(self.var_maxtemp.get())
         SHOW_CAMTEMP = bool(self.var_camtemp.get())
         ROTATE = self.var_rot.get()
+        BELL_TYPE = self.var_belltype.get()
         W_SIZE[0] = int(self.spin_size.get())
         W_SIZE[1] = int(W_SIZE[0] * 3 // 4)
 
@@ -271,3 +297,4 @@ class SettingDlg:
 
         OFFSET = float(self.spin_ofst.get())
         COEFFICIENT = float(self.spin_coef.get())
+

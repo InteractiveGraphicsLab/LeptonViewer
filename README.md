@@ -41,3 +41,12 @@
 ・(あるいは .\venv\Scripts\pyinstaller.exe -F -w --hidden-import=clr -i .\src\logo.ico .\src\viewer.py)
 ・ビルド結果が.\distに生成される
 ・実行時に必要なファイル（x64, x86, config.ini, default.ini, logo.ico）をコピーすれば他のwindowsマシンで実行可能
+
+
+以下のCC0ライセンスのアラームを利用しています．
+219244__zyrytsounds__alarm-clock-short.wav
+https://freesound.org/people/ZyryTSounds/sounds/219244/
+238390__amorralteixe__alarmclock.wav
+https://freesound.org/people/amorralteixe/sounds/238390/
+265769__richerlandtv__alarmclock.wav
+https://freesound.org/people/RICHERlandTV/sounds/265769/

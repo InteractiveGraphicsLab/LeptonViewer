@@ -10,6 +10,7 @@ import lepton_control
 import params
 import winsound
 
+
 class Application(tk.Frame):
 
     def __init__(self, master=None):
@@ -37,6 +38,7 @@ class Application(tk.Frame):
             messagebox.showwarning("Lepton Viewer", "カメラが見つかりません\nカメラを差し直してください")
             exit()
         self.popup_point = self.point = (params.W_SIZE[0] // 2, params.W_SIZE[1] // 2)
+        self.is_bell = False
 
     def right_button_clicked(self, event):
         self.popup_point = (event.x, event.y)
@@ -87,6 +89,16 @@ class Application(tk.Frame):
         else:
             res = cv2.rectangle(res, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (32, 223, 32), 3)
 
+        # set bell
+        if temp_max >= params.THRESHOLD and not self.is_bell:
+            winsound.PlaySound(params.get_bellpath(), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
+            self.is_bell = True
+            print("BELL ON")
+        elif temp_max < params.THRESHOLD and self.is_bell:
+            winsound.PlaySound(None, winsound.SND_FILENAME | winsound.SND_ASYNC)
+            self.is_bell = False
+            print("BELL OFF ")
+
         if params.SHOW_MAXTEMP:
             text = "MAX in ROI: {:.2f}".format(temp_max)
             res = cv2.putText(res, text, (10, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (0, 0, 0), 5, cv2.LINE_AA)
@@ -95,8 +107,8 @@ class Application(tk.Frame):
         if params.SHOW_CAMTEMP:
             camera_temp = self.camera.camera_temp()
             text = "CAM: {:.2f}".format(camera_temp)
-            res = cv2.putText(res, text, (300, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (0, 0, 0), 5, cv2.LINE_AA)
-            res = cv2.putText(res, text, (300, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
+            res = cv2.putText(res, text, (250, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (0, 0, 0), 5, cv2.LINE_AA)
+            res = cv2.putText(res, text, (250, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
 
         if SHOW_TEMP_AT_POINT:
             # note self.point represent the point in the displayed image (not in temp_img)
@@ -114,6 +126,7 @@ class Application(tk.Frame):
             b2 = (self.point[0] - 10, self.point[1] - 10)
             res = cv2.rectangle(res, b1, b2, (255, 255, 255), 2, cv2.LINE_AA, 0)
             res = cv2.rectangle(res, b1, b2, (32, 32, 255), 1, cv2.LINE_AA, 0)
+
 
         imgtk = ImageTk.PhotoImage(image=Image.fromarray(res))
         self.lmain.imgtk = imgtk
@@ -138,8 +151,6 @@ SHOW_TEMP_AT_POINT = False
 
 if __name__ == "__main__":
     params.init()
-
-    winsound.PlaySound("./bell1.wav", winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
 
     root = tk.Tk()
     app = Application(master=root)
