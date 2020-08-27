@@ -1,4 +1,25 @@
-実行方法
+# Lepton Viewer 
+Windows用，サーモカメラ Lepton 3.5 の可視化ツールです．  
+サーモグラフィ画像表示，閾値以上の画素のハイライト，閾値以上の画素が検出された際のアラーム音提示機能を持ちます．  
+  
+![LeptonViewer](https://github.com/InteractiveGraphicsLab/LeptonViewer/blob/dev_bellalarm/imgs/leptonviewer.gif "LeptonViewer")
+
+## 実行方法 (exeファイルを利用)
+- Lepton 3.5 または Lepton 3.0 がUSB接続されたWindows PCを用意してください
+- このリポジトリのリリースより，最新版のzipファイルをダウンロードし，展開してください  
+- Visual studio runtimeのインストール
+  - 展開したフォルダ内のInstallフォルダを開きVC_redist.x64.exeをダブルクリックしてください
+  - すでに新しいバージョンがインストール済み，の表示があればインストール不要です
+- dllファイルのアクセス許可
+  - 展開したフォルダ内のx64フォルダを開いてください
+  - フォルダ内dllを右クリックしプロパティを開いてください
+  - 「このファイルは他のコンピューターから取得したものです...」の表示があれば「ブロックの解除」をチェックしてください
+  - すべてのdllファイルにこの処理を行ってください
+  - ※なければ何もしなくて良いです
+- 展開したフォルダ内のLeptonViewer.exeをダブルクリックするとLeptonViewerが起動します．
+  
+
+## 実行方法（Pythonを利用する方法，開発者向け）
 
 1. Visual studio runtimeのインストール
 ・LeptonViewer\SDK\Lepton-SDK_PureThermal_Windows10_1.0.2\Redistributables\VC_redist.x64.exeをダブルクリック
