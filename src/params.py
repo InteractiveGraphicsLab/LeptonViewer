@@ -10,7 +10,7 @@ W_SIZE = [800, 600]
 ROI_RECT = [0, 0, 800, 600]
 
 # Bell Type 0, 1, or 2
-BELL_TYPE = 0
+BELL_TYPE = 1
 
 # flag for flipping image
 FLIP = True
@@ -96,15 +96,15 @@ def save_setting():
 
 
 def get_bellpath():
-    if BELL_TYPE == 0:
-        return "./bell1.wav"
     if BELL_TYPE == 1:
-        return "./bell2.wav"
+        return "./bell1.wav"
     if BELL_TYPE == 2:
-        return "./bell3.wav"
+        return "./bell2.wav"
     if BELL_TYPE == 3:
+        return "./bell3.wav"
+    if BELL_TYPE == 4:
         return "./bell4.wav"
-    return "./bell1.wav"
+    return None
 
 
 class SettingDlg:
@@ -219,17 +219,19 @@ class SettingDlg:
                                          textvariable=self.var_threshold, command=self.update)
         self.var_belltype = tk.IntVar()
         self.var_belltype.set(BELL_TYPE)
-        b1 = tk.Radiobutton(lf_threshold, text="0", value=0, variable=self.var_belltype, command=self.update)
-        b2 = tk.Radiobutton(lf_threshold, text="1", value=1, variable=self.var_belltype, command=self.update)
-        b3 = tk.Radiobutton(lf_threshold, text="2", value=2, variable=self.var_belltype, command=self.update)
-        b4 = tk.Radiobutton(lf_threshold, text="3", value=3, variable=self.var_belltype, command=self.update)
+        b0 = tk.Radiobutton(lf_threshold, text="off", value=0, variable=self.var_belltype, command=self.update)
+        b1 = tk.Radiobutton(lf_threshold, text="1", value=1, variable=self.var_belltype, command=self.update)
+        b2 = tk.Radiobutton(lf_threshold, text="2", value=2, variable=self.var_belltype, command=self.update)
+        b3 = tk.Radiobutton(lf_threshold, text="3", value=3, variable=self.var_belltype, command=self.update)
+        b4 = tk.Radiobutton(lf_threshold, text="4", value=4, variable=self.var_belltype, command=self.update)
         label_threshold.grid(row=0, column=0, padx=0, pady=5)
         self.spin_threshold.grid(row=0, column=1, padx=0, pady=5)
         label_bell_type.grid(row=1, column=0, padx=0, pady=5)
-        b1.grid(row=1, column=1, padx=0, pady=5)
-        b2.grid(row=1, column=2, padx=0, pady=5)
-        b3.grid(row=1, column=3, padx=0, pady=5)
-        b4.grid(row=1, column=4, padx=0, pady=5)
+        b0.grid(row=1, column=1, padx=0, pady=5)
+        b1.grid(row=1, column=2, padx=0, pady=5)
+        b2.grid(row=1, column=3, padx=0, pady=5)
+        b3.grid(row=1, column=4, padx=0, pady=5)
+        b4.grid(row=1, column=5, padx=0, pady=5)
 
         # calibration  --------------------------------------------------------------------------------
         lf_calibration = tk.LabelFrame(top, text="Calibration")
