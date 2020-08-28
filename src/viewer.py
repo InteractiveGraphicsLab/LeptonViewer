@@ -8,6 +8,7 @@ import math
 import configparser
 import lepton_control
 import params
+import winsound
 
 
 class Application(tk.Frame):
@@ -37,6 +38,7 @@ class Application(tk.Frame):
             messagebox.showwarning("Lepton Viewer", "カメラが見つかりません\nカメラを差し直してください")
             exit()
         self.popup_point = self.point = (params.W_SIZE[0] // 2, params.W_SIZE[1] // 2)
+        self.is_bell = False
 
     def right_button_clicked(self, event):
         self.popup_point = (event.x, event.y)
@@ -58,50 +60,62 @@ class Application(tk.Frame):
     def show_lepton_frame(self):
         # get lepton image (raw) and convert it to temperature (temp)
         raw_img, temp_img = self.camera.update_frame(params.ROTATE, params.FLIP, params.COEFFICIENT, params.OFFSET)
-        temp_max = np.max(temp_img)
 
-        # tone mapping
+        # tone mapping and highlight in Red
         gray = np.interp(temp_img, (params.TONE_MIN, params.TONE_MAX), (0, 255)).astype('uint8')
         gray = np.dstack([gray, gray, gray])
 
-        # paint overheat pixels in RED
         overheat = np.transpose(np.where(temp_img >= params.THRESHOLD))
         for i, j in overheat:
             gray[i, j] = lut_overheat(temp_img[i, j] - params.THRESHOLD)
 
-        if params.ROTATE % 2 == 0:
-            res = cv2.resize(gray, (params.W_SIZE[0], params.W_SIZE[1]), interpolation=cv2.INTER_LANCZOS4)
-        else:
-            res = cv2.resize(gray, (params.W_SIZE[1], params.W_SIZE[0]), interpolation=cv2.INTER_LANCZOS4)
+        # resize image
+        width = params.W_SIZE[0] if params.ROTATE % 2 == 0 else params.W_SIZE[1]
+        height = params.W_SIZE[1] if params.ROTATE % 2 == 0 else params.W_SIZE[0]
+        res = cv2.resize(gray, (width, height), interpolation=cv2.INTER_LANCZOS4)
 
+        # get max temper in params.ROI_RECT
+        scale = raw_img.shape[1] / width
+        rx = np.clip(int(params.ROI_RECT[0] * scale), 0, width - 2)
+        ry = np.clip(int(params.ROI_RECT[1] * scale), 0, height - 2)
+        rw = np.clip(int(params.ROI_RECT[2] * scale), 1, width)
+        rh = np.clip(int(params.ROI_RECT[3] * scale), 1, height)
+        temp_max = np.max(temp_img[ry: ry + rh, rx: rx + rw])
+
+        # draw rect
+        rect = params.ROI_RECT
         if temp_max >= params.THRESHOLD:
-            res[:5, :] = [255, 32, 32]
-            res[-5:, :] = [255, 32, 32]
-            res[:, :5] = [255, 32, 32]
-            res[:, -5:] = [255, 32, 32]
+            res = cv2.rectangle(res, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (255, 32, 32), 3)
         else:
-            res[:5, :] = [32, 223, 32]
-            res[-5:, :] = [32, 223, 32]
-            res[:, :5] = [32, 223, 32]
-            res[:, -5:] = [32, 223, 32]
+            res = cv2.rectangle(res, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (32, 223, 32), 3)
+
+        # set bell
+        if temp_max >= params.THRESHOLD and not self.is_bell:
+            winsound.PlaySound(params.get_bellpath(), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
+            self.is_bell = True
+            print("BELL ON")
+        elif temp_max < params.THRESHOLD and self.is_bell:
+            winsound.PlaySound(None, winsound.SND_FILENAME | winsound.SND_ASYNC)
+            self.is_bell = False
+            print("BELL OFF ")
 
         if params.SHOW_MAXTEMP:
-            text = "MAX: {:.2f}".format(temp_max)
+            text = "MAX in ROI: {:.2f}".format(temp_max)
             res = cv2.putText(res, text, (10, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (0, 0, 0), 5, cv2.LINE_AA)
             res = cv2.putText(res, text, (10, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
 
         if params.SHOW_CAMTEMP:
             camera_temp = self.camera.camera_temp()
             text = "CAM: {:.2f}".format(camera_temp)
-            res = cv2.putText(res, text, (150, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (0, 0, 0), 5, cv2.LINE_AA)
-            res = cv2.putText(res, text, (150, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
+            res = cv2.putText(res, text, (250, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (0, 0, 0), 5, cv2.LINE_AA)
+            res = cv2.putText(res, text, (250, 25), cv2.FONT_HERSHEY_PLAIN, 1.25, (255, 255, 255), 1, cv2.LINE_AA)
 
         if SHOW_TEMP_AT_POINT:
             # note self.point represent the point in the displayed image (not in temp_img)
             # r_p (point*scale) is the point in temp_img (or raw image)
-            scale = raw_img.shape[1] / params.W_SIZE[0]
+            scale = raw_img.shape[1] / width
             r_p = (int(self.point[0] * scale), int(self.point[1] * scale))
-            shift = int(10 * scale)
+            shift = int(10 * scale + 1)
             point_temp = np.mean(temp_img[r_p[1]-shift: r_p[1]+shift, r_p[0]-shift: r_p[0]+shift])
             text = "{:.2f}".format(point_temp)
 
@@ -112,6 +126,7 @@ class Application(tk.Frame):
             b2 = (self.point[0] - 10, self.point[1] - 10)
             res = cv2.rectangle(res, b1, b2, (255, 255, 255), 2, cv2.LINE_AA, 0)
             res = cv2.rectangle(res, b1, b2, (32, 32, 255), 1, cv2.LINE_AA, 0)
+
 
         imgtk = ImageTk.PhotoImage(image=Image.fromarray(res))
         self.lmain.imgtk = imgtk

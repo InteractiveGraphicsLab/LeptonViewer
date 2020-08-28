@@ -6,6 +6,12 @@ import configparser
 # visualization window size
 W_SIZE = [800, 600]
 
+# ROI (x,y,W,H)
+ROI_RECT = [0, 0, 800, 600]
+
+# Bell Type 0, 1, or 2
+BELL_TYPE = 1
+
 # flag for flipping image
 FLIP = True
 
@@ -28,8 +34,9 @@ OFFSET = 0.0
 COEFFICIENT = 0.05
 
 
+
 def init():
-    global W_SIZE, FLIP, ROTATE, TONE_MIN, TONE_MAX, THRESHOLD, SHOW_MAXTEMP, SHOW_CAMTEMP, OFFSET, COEFFICIENT
+    global W_SIZE, FLIP, ROTATE, TONE_MIN, TONE_MAX, THRESHOLD, SHOW_MAXTEMP, SHOW_CAMTEMP, OFFSET, COEFFICIENT, ROI_RECT, BELL_TYPE
     config = configparser.ConfigParser()
     config.read("./config.ini")
 
@@ -45,6 +52,13 @@ def init():
 
     OFFSET = float(config['CALIBRATION']['offset'])
     COEFFICIENT = float(config['CALIBRATION']['coefficient'])
+
+    ROI_RECT[0] = int(config['ROI_RECT']['x'])
+    ROI_RECT[1] = int(config['ROI_RECT']['y'])
+    ROI_RECT[2] = int(config['ROI_RECT']['w'])
+    ROI_RECT[3] = int(config['ROI_RECT']['h'])
+
+    BELL_TYPE = int(config['BELL_TYPE']['bell'])
 
 
 def save_setting():
@@ -68,12 +82,32 @@ def save_setting():
     config.set('CALIBRATION', 'offset', str(OFFSET))
     config.set('CALIBRATION', 'coefficient', str(COEFFICIENT))
 
+    config.add_section('ROI_RECT')
+    config.set('ROI_RECT', 'x', str(ROI_RECT[0]))
+    config.set('ROI_RECT', 'y', str(ROI_RECT[1]))
+    config.set('ROI_RECT', 'w', str(ROI_RECT[2]))
+    config.set('ROI_RECT', 'h', str(ROI_RECT[3]))
+
+    config.add_section('BELL_TYPE')
+    config.set('BELL_TYPE', 'bell', int(BELL_TYPE))
+
     with open('./config.ini', 'w') as configfile:
         config.write(configfile)
 
 
-class SettingDlg:
+def get_bellpath():
+    if BELL_TYPE == 1:
+        return "./bell1.wav"
+    if BELL_TYPE == 2:
+        return "./bell2.wav"
+    if BELL_TYPE == 3:
+        return "./bell3.wav"
+    if BELL_TYPE == 4:
+        return "./bell4.wav"
+    return None
 
+
+class SettingDlg:
     def __init__(self, camera_is_tlinear):
         top = tk.Toplevel()
         top.resizable(0, 0)
@@ -149,17 +183,55 @@ class SettingDlg:
         self.spin_tonemin.grid(row=0, column=1, padx=5, pady=5)
         self.spin_tonemax.grid(row=0, column=3, padx=5, pady=5)
 
+        # ROI rectangle --------------------------------------------------------------------------------
+        lf_roi = tk.LabelFrame(top, text="最大温度計測領域（ROI）")
+        lf_roi.pack(fill="both", expand="yes", padx=10, pady=5)
+        roi_label1 = tk.Label(lf_roi, text="位置　(x, y)")
+        roi_label2 = tk.Label(lf_roi, text="大きさ(W, H)")
+        roi_label1.grid(row=0, column=0, padx=5, pady=5)
+        roi_label2.grid(row=1, column=0, padx=5, pady=5)
+        self.var_roix = tk.StringVar()
+        self.var_roiy = tk.StringVar()
+        self.var_roiw = tk.StringVar()
+        self.var_roih = tk.StringVar()
+        self.var_roix.set(ROI_RECT[0])
+        self.var_roiy.set(ROI_RECT[1])
+        self.var_roiw.set(ROI_RECT[2])
+        self.var_roih.set(ROI_RECT[3])
+        self.spin_roix = tk.Spinbox(lf_roi, from_=0, to=1200, increment=1, textvariable=self.var_roix, width=6, command=self.update)
+        self.spin_roiy = tk.Spinbox(lf_roi, from_=0, to=1200, increment=1, textvariable=self.var_roiy, width=6, command=self.update)
+        self.spin_roiw = tk.Spinbox(lf_roi, from_=1, to=1200, increment=1, textvariable=self.var_roiw, width=6, command=self.update)
+        self.spin_roih = tk.Spinbox(lf_roi, from_=1, to=1200, increment=1, textvariable=self.var_roih, width=6, command=self.update)
+        self.spin_roix.grid(row=0, column=1, padx=2, pady=2)
+        self.spin_roiy.grid(row=0, column=2, padx=2, pady=2)
+        self.spin_roiw.grid(row=1, column=1, padx=2, pady=2)
+        self.spin_roih.grid(row=1, column=2, padx=2, pady=2)
+
         # threshold --------------------------------------------------------------------------------
         lf_threshold = tk.LabelFrame(top, text="Threshold - 超過温度可視化")
         lf_threshold.pack(fill="both", expand="yes", padx=10, pady=5, ipady=5)
 
         label_threshold = tk.Label(lf_threshold, text="    閾値温度[℃] ")
-        label_threshold.pack(side=tk.LEFT)
+        label_bell_type = tk.Label(lf_threshold, text=" bell type")
         self.var_threshold = tk.StringVar()
         self.var_threshold.set(THRESHOLD)
         self.spin_threshold = tk.Spinbox(lf_threshold, from_=-100, to=500, format="%.2f", increment=0.1, width=6,
                                          textvariable=self.var_threshold, command=self.update)
-        self.spin_threshold.pack(side=tk.LEFT)
+        self.var_belltype = tk.IntVar()
+        self.var_belltype.set(BELL_TYPE)
+        b0 = tk.Radiobutton(lf_threshold, text="off", value=0, variable=self.var_belltype, command=self.update)
+        b1 = tk.Radiobutton(lf_threshold, text="1", value=1, variable=self.var_belltype, command=self.update)
+        b2 = tk.Radiobutton(lf_threshold, text="2", value=2, variable=self.var_belltype, command=self.update)
+        b3 = tk.Radiobutton(lf_threshold, text="3", value=3, variable=self.var_belltype, command=self.update)
+        b4 = tk.Radiobutton(lf_threshold, text="4", value=4, variable=self.var_belltype, command=self.update)
+        label_threshold.grid(row=0, column=0, padx=0, pady=5)
+        self.spin_threshold.grid(row=0, column=1, padx=0, pady=5)
+        label_bell_type.grid(row=1, column=0, padx=0, pady=5)
+        b0.grid(row=1, column=1, padx=0, pady=5)
+        b1.grid(row=1, column=2, padx=0, pady=5)
+        b2.grid(row=1, column=3, padx=0, pady=5)
+        b3.grid(row=1, column=4, padx=0, pady=5)
+        b4.grid(row=1, column=5, padx=0, pady=5)
 
         # calibration  --------------------------------------------------------------------------------
         lf_calibration = tk.LabelFrame(top, text="Calibration")
@@ -196,18 +268,35 @@ class SettingDlg:
         btn_save.pack(side=tk.RIGHT)
 
     def update(self):
-        global FLIP, ROTATE, W_SIZE, SHOW_MAXTEMP, SHOW_CAMTEMP, TONE_MIN, TONE_MAX, THRESHOLD, OFFSET, COEFFICIENT
+        global FLIP, ROTATE, W_SIZE, SHOW_MAXTEMP, SHOW_CAMTEMP, TONE_MIN, TONE_MAX, THRESHOLD, OFFSET, COEFFICIENT, \
+            ROI_RECT, BELL_TYPE
         FLIP = bool(self.var_flip.get())
         SHOW_MAXTEMP = bool(self.var_maxtemp.get())
         SHOW_CAMTEMP = bool(self.var_camtemp.get())
         ROTATE = self.var_rot.get()
+        BELL_TYPE = self.var_belltype.get()
         W_SIZE[0] = int(self.spin_size.get())
         W_SIZE[1] = int(W_SIZE[0] * 3 // 4)
 
         TONE_MIN = float(self.spin_tonemin.get())
         TONE_MAX = float(self.spin_tonemax.get())
 
+        ROI_RECT[0] = int(self.spin_roix.get())
+        ROI_RECT[1] = int(self.spin_roiy.get())
+        ROI_RECT[2] = int(self.spin_roiw.get())
+        ROI_RECT[3] = int(self.spin_roih.get())
+        if ROTATE % 2 == 0:
+            w, h = W_SIZE[0], W_SIZE[1]
+        else:
+            w, h = W_SIZE[1], W_SIZE[0]
+        print(W_SIZE, w, h)
+        ROI_RECT[0] = np.clip(ROI_RECT[0], 0, w-2)
+        ROI_RECT[1] = np.clip(ROI_RECT[1], 0, h-2)
+        ROI_RECT[2] = np.clip(ROI_RECT[2], 1, w  )
+        ROI_RECT[3] = np.clip(ROI_RECT[3], 1, h  )
+
         THRESHOLD = float(self.spin_threshold.get())
 
         OFFSET = float(self.spin_ofst.get())
         COEFFICIENT = float(self.spin_coef.get())
+
