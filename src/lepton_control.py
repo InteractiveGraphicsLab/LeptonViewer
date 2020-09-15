@@ -94,6 +94,9 @@ class Lepton:
         # convert it in celsius by (value - 27315) / 100
         return (self.lep.sys.GetFpaTemperatureKelvin() - 27315) / 100
 
+    def run_ffc(self):
+        self.lep.sys.RunFFCNormalization()
+
     def stop_streaming(self):
         print("Stop streaming")
         self.capture.StopGraph()

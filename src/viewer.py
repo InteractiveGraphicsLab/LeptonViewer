@@ -17,6 +17,7 @@ class Application(tk.Frame):
         super().__init__(master)
         self.master = master
         self.pack()
+        self.master.bind("<f>", self.run_ffc)
 
         # MainPanel を 全体に配置し、右クリックをpopup menu に対応付け
         self.lmain = tk.Label(root)
@@ -28,6 +29,7 @@ class Application(tk.Frame):
         self.m.add_command(label="ここの温度を表示", command=self.start_show_temp)
         self.m.add_command(label="温度非表示", command=self.stop_show_temp)
         self.m.add_separator()
+        self.m.add_command(label="フラットフィールド補正(F)", command=self.run_ffc)
         self.m.add_command(label="設定", command=self.show_param_dlg)
 
         # lepton カメラの読み込み
@@ -56,6 +58,9 @@ class Application(tk.Frame):
         global SHOW_TEMP_AT_POINT
         SHOW_TEMP_AT_POINT = True
         self.point = self.popup_point
+
+    def run_ffc(self, event=None):
+        self.camera.run_ffc()
 
     def show_lepton_frame(self):
         # get lepton image (raw) and convert it to temperature (temp)
